@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import { aspectRatios, stylePresetToDesignSystem, type AspectPresetId, type StylePresetId } from '@agl/composition-schema';
 import { demoArticleForResult, demoResults, type DemoResult, type DemoResultAnimation } from '../data/demo-results';
 import { buildCurrentResultView, type CurrentArticleResult, type ResultAnimation } from '../lib/current-result-view';
@@ -90,12 +90,11 @@ function insertedAnimations(animations: ResultAnimation[]) {
 }
 
 export function ResultsPage({ onBack, onUseDemoArticle, currentArticleResult }: Props) {
-  const resultViews = useMemo(() => {
+  const active = useMemo<ResultView | undefined>(() => {
     const current = buildCurrentResultView(currentArticleResult);
-    return [current, ...demoResults.map(demoResultToView)].filter(Boolean) as ResultView[];
+    if (current) return current;
+    return demoResults.map(demoResultToView).filter(Boolean)[0] as ResultView | undefined;
   }, [currentArticleResult]);
-  const [activeId, setActiveId] = useState(resultViews[0]?.id || '');
-  const active = resultViews.find(result => result.id === activeId) || resultViews[0];
   const activeDesign = active ? stylePresetToDesignSystem(active.stylePreset) : undefined;
   const inserts = useMemo(() => active ? insertedAnimations(active.animations) : {}, [active]);
 
@@ -108,24 +107,13 @@ export function ResultsPage({ onBack, onUseDemoArticle, currentArticleResult }: 
 
     <section className="results-page">
       <div className="results-hero">
-        <span className="kicker">Before / after examples</span>
-        <h1>Articles with real generated animations inserted.</h1>
-        <p>The left side shows the article as imported. The right side shows the same article with the actual generated HTML previews or rendered GIF/MP4 assets inserted in place. Static fixtures still use lightweight placeholders.</p>
+        <span className="kicker">Focused before / after</span>
+        <h1>The real generated article gets the whole screen.</h1>
+        <p>No result picker, no competing examples. This view focuses on the current workspace article and uses the available space to show the real generated HTML previews or rendered GIF/MP4 assets in context.</p>
       </div>
 
-      <div className="results-layout">
-        <aside className="results-list">
-          {resultViews.map(result => {
-            const design = stylePresetToDesignSystem(result.stylePreset);
-            return <button key={result.id} className={result.id === active?.id ? 'result-card selected' : 'result-card'} onClick={() => setActiveId(result.id)}>
-              <strong>{result.title}</strong>
-              <span>{result.articleTitle}</span>
-              <em style={{ color: design.colors.accent }}>{design.label} · {result.animations.length} animations{result.isCurrent ? ' · current' : ''}</em>
-            </button>;
-          })}
-        </aside>
-
-        {active && activeDesign && <section className={active.isCurrent ? 'result-detail current-result-detail' : 'result-detail'}>
+      <div className="results-layout single-result-layout">
+        {active && activeDesign && <section className={active.isCurrent ? 'result-detail current-result-detail focused-result-detail' : 'result-detail focused-result-detail'}>
           <div className="result-detail-head">
             <div>
               <span className="kicker">Saved result · {active.createdAt}</span>
