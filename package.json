@@ -1,0 +1,49 @@
+{
+  "name": "animated-graphics-lab",
+  "version": "1.0.0",
+  "description": "Local-first article visualization lab that turns agent-written AGL_GRAPHIC placeholders into animated GIF/MP4 article embeds.",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm run test --workspaces --if-present",
+    "build": "npm run build --workspace packages/composition-schema && npm run build --workspace packages/workflow-core && npm run build --workspace apps/web && npm run build --workspace apps/worker",
+    "dev:web": "npm run dev --workspace apps/web",
+    "dev:api": "wrangler dev --config apps/worker/wrangler.toml --local --persist-to .wrangler/state --port 8787",
+    "dev:render": "npm run start --workspace @agl/render-worker",
+    "setup:local": "node scripts/setup-local.mjs",
+    "check:local": "node scripts/check-local-prereqs.mjs",
+    "db:local:migrate": "wrangler d1 migrations apply animated_graphics_lab --local --persist-to .wrangler/state --config apps/worker/wrangler.toml",
+    "agent:pack": "node scripts/install-agent-pack.mjs",
+    "smoke:local": "node scripts/smoke-local.mjs",
+    "local:setup": "npm run check:local && npm run setup:local && npm run db:local:migrate && npm run build && npm test -- --runInBand",
+    "local:setup:codex": "npm run check:local -- --require-agent --agent=codex && npm run agl:codex:check && npm run setup:local -- --agent=codex && npm run db:local:migrate && npm run build && npm test -- --runInBand",
+    "local:setup:custom": "npm run check:local -- --require-agent && npm run setup:local -- --agent=custom && npm run db:local:migrate && npm run build && npm test -- --runInBand",
+    "local:dev": "node scripts/dev-local.mjs",
+    "agl:run": "npm run build --workspace @agl/workflow-core && node packages/local-runner/src/cli.mjs run",
+    "agl:doctor:mac": "node packages/local-runner/src/cli.mjs doctor --target mac",
+    "agl:codex:check": "node packages/local-runner/src/cli.mjs codex-check",
+    "agl:render:test": "node packages/local-runner/src/cli.mjs render-test",
+    "agl:examples": "node packages/local-runner/src/cli.mjs examples",
+    "check:design-labels": "npm run build --workspace packages/composition-schema && node scripts/check-design-labels.mjs"
+  },
+  "keywords": [
+    "article-visualization",
+    "agents",
+    "gif",
+    "gsap",
+    "hyperframes",
+    "cloudflare",
+    "hackathon"
+  ],
+  "author": "Animated Graphics Lab Contributors",
+  "license": "MIT",
+  "type": "module",
+  "private": false,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hungryclaw/animated-graphics-lab.git"
+  }
+}

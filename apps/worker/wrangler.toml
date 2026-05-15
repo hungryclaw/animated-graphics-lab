@@ -1,0 +1,11 @@
+name = "animated-graphics-lab-api"
+main = "src/index.ts"
+compatibility_date = "2026-05-14"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "animated_graphics_lab"
+database_id = "REPLACE_WITH_D1_DATABASE_ID"
+
+[vars]
+APP_ORIGIN = "https://animated-graphics-lab.pages.dev"

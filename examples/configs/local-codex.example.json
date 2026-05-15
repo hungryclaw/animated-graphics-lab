@@ -1,0 +1,19 @@
+{
+  "agent": {
+    "kind": "codex",
+    "command": "codex",
+    "args": ["exec", "--json", "{prompt}"],
+    "model": "local-codex-subscription"
+  },
+  "render": {
+    "engine": "hyperframes",
+    "poweredBy": "HyperFrames from HeyGen",
+    "fps": 30,
+    "gifFps": 15,
+    "gifWidth": 1440,
+    "workers": 2
+  },
+  "output": {
+    "root": ".agl/runs"
+  }
+}

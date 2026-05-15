@@ -1,0 +1,15 @@
+AI can write articles fast. A lot of them still look like polished oatmeal.
+
+On your own site, HTML animations are great. But on Medium, Substack, X, and newsletters, you usually need something portable.
+
+So for the HeyGen Hackathon, I built Animated Graphics Lab.
+
+AGL reads the article, finds moments where motion would help, and turns those ideas into live HTML and GSAP previews.
+
+The writer previews it first. If the visual misses the point, you fix it before rendering.
+
+When it is approved, HyperFrames from HeyGen renders the animation to MP4, and AGL exports a GIF too.
+
+Now the same visual works almost anywhere you publish.
+
+Animated Graphics Lab. HTML when you are designing. GIF when you are publishing.

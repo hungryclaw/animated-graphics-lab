@@ -1,0 +1,19 @@
+{
+  "agent": {
+    "kind": "hermes",
+    "command": "hermes",
+    "args": ["chat", "-q", "{prompt}", "--provider", "openai-codex", "--model", "gpt-5.5", "--quiet"],
+    "model": "gpt-5.5"
+  },
+  "render": {
+    "engine": "hyperframes",
+    "poweredBy": "HyperFrames from HeyGen",
+    "fps": 30,
+    "gifFps": 15,
+    "gifWidth": 1440,
+    "workers": 2
+  },
+  "output": {
+    "root": ".agl/runs"
+  }
+}

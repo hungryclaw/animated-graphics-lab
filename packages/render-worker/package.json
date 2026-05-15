@@ -1,0 +1,1 @@
+{"name":"@agl/render-worker","version":"0.1.0","type":"module","bin":{"agl-render-worker":"src/worker.mjs"},"scripts":{"test":"node --test test/*.test.mjs","start":"node src/worker.mjs","dry-run":"node src/worker.mjs --once --dry-run"},"dependencies":{"@agl/composition-schema":"file:../composition-schema","jsonrepair":"^3.13.1"}}

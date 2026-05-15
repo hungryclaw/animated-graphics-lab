@@ -1,0 +1,3 @@
+import test from 'node:test'; import assert from 'node:assert/strict'; import { labelsFromConcept, renderHtml } from '../src/template.mjs';
+test('labelsFromConcept creates four labels', () => { assert.equal(labelsFromConcept('one two three four five six seven eight nine ten eleven twelve').length, 4); });
+test('renderHtml includes HyperFrames metadata and escaped labels', () => { const html = renderHtml({concept_text:'A <bad> idea becomes useful', width:1920, height:540, duration_seconds:7, style_preset:'appleMinimal'}); assert.match(html, /data-composition-id="main"/); assert.match(html, /window.__hf/); assert.match(html, /&lt;bad&gt;/); });

@@ -1,0 +1,20 @@
+export type JobStatus = 'draft'|'queued'|'claimed'|'composing'|'preview_ready'|'rendering_mp4'|'converting_gif'|'uploading'|'done'|'failed'|'cancelled';
+export type Job = { id: string; status: JobStatus; queuePosition?: number; createdAt?: string; updatedAt?: string; gifUrl?: string; mp4Url?: string; sourceUrl?: string; errorMessage?: string; events?: JobEvent[] };
+export type JobEvent = { id?: number; createdAt: string; level: 'info'|'warn'|'error'; message: string };
+export type GraphicDraft = { interpretation: string; grammar: string; generatedHtml: string; notes: string[] };
+export type ArticleVisualizationSpot = {
+  id: string;
+  priority: number;
+  anchorText: string;
+  insertAfterParagraph: number;
+  articleExcerpt: string;
+  visualIdea: string;
+  conceptText: string;
+  grammar: string;
+  aspectPreset: string;
+  durationSeconds: number;
+  rationale: string;
+  captionSuggestion?: string;
+};
+export type ArticleVisualizationPlan = { title?: string; summary: string; spots: ArticleVisualizationSpot[] };
+export type ArticleSpotState = ArticleVisualizationSpot & { accepted: boolean; draft?: GraphicDraft; job?: Job; error?: string; busy?: boolean; busyLabel?: string; busyStatus?: string; busyId?: string; changePrompt?: string; directive?: { raw: string; start: number; end: number; placement: 'before'|'after'|'replace'; parseStatus?: 'ok'|'warning'|'error'; parseMessage?: string } };

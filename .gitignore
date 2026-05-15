@@ -1,0 +1,27 @@
+node_modules/
+.env
+.env.*
+!.env.example
+.DS_Store
+*.log
+*.tsbuildinfo
+apps/web/dist/
+packages/composition-schema/dist/
+packages/*/node_modules/
+apps/*/node_modules/
+.wrangler/
+.dev.vars
+.agl/
+!.agl/examples/
+apps/worker/.dev.vars
+apps/web/.env.local
+.env.render-worker.local
+jobs/
+*.mp4
+*.gif
+.hermes/
+# Local secrets and generated artifacts
+.env*
+*.local
+dist/
+coverage/
