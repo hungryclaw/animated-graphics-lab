@@ -19,6 +19,7 @@
     "local:setup:custom": "npm run check:local -- --require-agent && npm run setup:local -- --agent=custom && npm run db:local:migrate && npm run build && npm test -- --runInBand",
     "local:dev": "node scripts/dev-local.mjs",
     "agl:run": "npm run build --workspace @agl/workflow-core && node packages/local-runner/src/cli.mjs run",
+    "agl:render-bundle": "npm run build --workspace @agl/workflow-core && node packages/local-runner/src/cli.mjs render-bundle",
     "agl:doctor:mac": "node packages/local-runner/src/cli.mjs doctor --target mac",
     "agl:codex:check": "node packages/local-runner/src/cli.mjs codex-check",
     "agl:render:test": "node packages/local-runner/src/cli.mjs render-test",

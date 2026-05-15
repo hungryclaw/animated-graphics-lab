@@ -11,6 +11,7 @@ The agent does not render anything. It only places structured placeholders.
 3. Keep the placeholder self-contained: the animation brief should make sense even if AGL only sees that block and the nearby paragraph.
 4. Use 2-5 visuals for a normal article.
 5. The human pastes the finished draft into AGL and clicks `Import graphic placeholders`.
+6. The human previews each imported visual, then either queues a local render worker job or exports a local HyperFrames render bundle.
 
 ## Full directive format
 
@@ -105,7 +106,7 @@ Avoid:
 4. Review each spot.
 5. Generate live preview.
 6. Revise the preview if needed.
-7. Render approved graphics.
+7. Render approved graphics or export a render bundle for local HyperFrames rendering.
 8. Export HTML or Markdown with visuals embedded or pending markers preserved.
 
 ## Install the instruction pack locally

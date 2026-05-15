@@ -26,6 +26,7 @@ All three should use `packages/workflow-core` for `AGL_GRAPHIC` parsing, article
    - ffmpeg/ffprobe converts and verifies GIF/MP4 artifacts.
 7. Export
    - `packages/workflow-core` writes Markdown/HTML with relative visual paths.
+   - The web app can also export a local HyperFrames render bundle containing `manifest.json`, `render-all.mjs`, and the exact approved preview HTML sources.
 8. Manifest
    - `manifest.json` records run stage, visual status, artifacts, validation, and errors.
 

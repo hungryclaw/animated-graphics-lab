@@ -128,7 +128,7 @@ Use this when you want the app to analyze an article and propose visuals.
 4. Review the 3-5 suggested spots.
 5. Generate one preview at a time.
 6. Revise previews until they match the article.
-7. Render approved previews.
+7. Render approved previews, or click `Export render bundle` to render the exact approved HTML with HyperFrames on another local machine.
 8. Export HTML or Markdown.
 
 ## Agentic article flow
@@ -164,6 +164,35 @@ npm run agl:run -- --input examples/articles/directive-demo.md --agent codex --r
 ```
 
 The runner writes `manifest.json`, `article.final.md`, `article.final.html`, source HTML, and rendered GIF/MP4 artifacts under `.agl/runs/<run-id>`.
+
+## Local HyperFrames render bundle
+
+Use this when the browser already has approved previews and you want to render them locally without a running queue worker or hosted artifact storage.
+
+1. Open the article visual editor.
+2. Generate at least one live preview.
+3. Click `Export render bundle`.
+4. Unzip the downloaded `*-agl-render-bundle.zip`.
+5. Render from inside the bundle:
+
+```bash
+cd /path/to/unzipped-agl-render-bundle
+node render-all.mjs --dry-run
+node render-all.mjs
+```
+
+Or render the same bundle from a cloned repo:
+
+```bash
+npm run agl:render-bundle -- --bundle /path/to/unzipped-agl-render-bundle --dry-run
+npm run agl:render-bundle -- --bundle /path/to/unzipped-agl-render-bundle
+```
+
+The bundle contains no credentials. It includes `manifest.json`, `article.input.md`, preview article files, `render-all.mjs`, and `visuals/<id>/source.html`. Full render outputs are `visuals/<id>/render.mp4`, `visuals/<id>/render.gif`, `article.rendered.md`, `article.rendered.html`, and `render-results.json`.
+
+## Clear UI during demos
+
+Use the top-nav `Clear UI` button when a demo run gets noisy or stale. It clears saved article/concept text, active polling markers, previews, render jobs, article plans, open inline editors, imported design systems, and style/aspect/duration state. It intentionally does not erase saved access keys; clear browser site data if you also want to remove local keys.
 
 ## Using a different local agent CLI
 

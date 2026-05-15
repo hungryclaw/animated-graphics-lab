@@ -32,7 +32,7 @@ Choose a built-in visual style or paste a `DESIGN.md` file. AGL normalizes the d
 - `apps/web`: React + Vite + TypeScript UI with article mode, live previews, directive import, instructions, and export.
 - `apps/worker`: Cloudflare Worker API with D1 queues, local Wrangler dev, hashed-token auth, optional R2 upload storage, and worker polling endpoints.
 - `packages/composition-schema`: shared Zod schemas, aspect presets, style presets, and directive types.
-- `packages/workflow-core`: shared AGL directive parsing, article export, run manifest, and workflow state types used by the web UI and local runner.
+- `packages/workflow-core`: shared AGL directive parsing, article export, local render-bundle generation, run manifest, and workflow state types used by the web UI and local runner.
 - `packages/render-worker`: local pull worker that uses Hermes or any configured agent CLI, writes safe HTML/GSAP, renders with HyperFrames from HeyGen, and converts GIFs with ffmpeg.
 - `packages/local-runner`: autonomous CLI for local MacBook/device runs, Codex/Hermes/custom agent adapters, HyperFrames render smoke test, and artifact export.
 
@@ -135,6 +135,35 @@ avoid:
 
 Paste the article into AGL and click `Import graphic placeholders`, or run it through `npm run agl:run` for the autonomous path.
 
+## Quickstart: export a local render bundle
+
+Use this when the browser has approved previews and you want a portable local HyperFrames render package instead of depending on a running queue worker or hosted storage.
+
+1. Open AGL in article mode.
+2. Import placeholders or find visualization spots.
+3. Generate at least one live preview.
+4. Click `Export render bundle`.
+5. Unzip the downloaded `*-agl-render-bundle.zip` and render locally:
+
+```bash
+cd /path/to/unzipped-agl-render-bundle
+node render-all.mjs --dry-run
+node render-all.mjs
+```
+
+Or render from this repo:
+
+```bash
+npm run agl:render-bundle -- --bundle /path/to/unzipped-agl-render-bundle --dry-run
+npm run agl:render-bundle -- --bundle /path/to/unzipped-agl-render-bundle
+```
+
+The bundle contains no credentials. Outputs are `visuals/<id>/render.mp4`, `visuals/<id>/render.gif`, `article.rendered.md`, `article.rendered.html`, and `render-results.json`.
+
+## Clear UI during demos
+
+Use the `Clear UI` button in the top nav when you want to reset the browser workspace. It clears saved article/concept text, active operation IDs, previews, render jobs, article plans, inline editor state, imported design-system state, and style/aspect/duration defaults. It intentionally does not erase saved access keys; clear browser site data if you want those removed too.
+
 ## Local commands
 
 ```bash
@@ -147,6 +176,7 @@ npm run smoke:local       # start local API and check /api/health
 npm run agl:codex:check   # check local Codex CLI availability; optional prompt probe
 npm run agl:render:test   # render a known-good HyperFrames smoke graphic
 npm run agl:run           # autonomous local article visualizer
+npm run agl:render-bundle # render an exported browser bundle locally
 npm run dev:api
 npm run dev:web
 npm run dev:render

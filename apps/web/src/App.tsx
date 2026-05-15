@@ -4,7 +4,9 @@ import { ArticleAnalysisRequestSchema, aspectRatios, stylePresets, DraftRequestS
 import { PreviewCanvas } from './compositions/PreviewCanvas';
 import { analyzeArticle, createDraft, createJob, getJob, uploadReference, waitForArticleAnalysis, waitForDraft, type PollProgress } from './lib/api';
 import { articleBaseName, buildArticleHtml, buildArticleMarkdown, downloadText, splitArticleParagraphs } from './lib/article-export';
+import { buildRenderBundleFiles } from '@agl/workflow-core';
 import { buildArticleGifDownloads, downloadGif, downloadGifBatch, gifDownloadFilename } from './lib/gif-downloads';
+import { downloadRenderBundleZip, renderBundleFilename } from './lib/render-bundle-download';
 import { directiveToSpot, extractGraphicDirectives, inferTitle, stripGraphicDirectives } from './lib/graphic-directives';
 import { clearActiveOperation, loadActiveOperation, loadAppState, saveActiveOperation, saveAppState, shouldResumeOperation, type ActiveOperation } from './lib/resume-state';
 import { DesignSystemPreview } from './components/DesignSystemPreview';
@@ -94,12 +96,13 @@ type ArticleEmbeddedPreviewProps = {
   previewSpot: (spotId: string, revision?: boolean) => void;
   renderSpot: (spotId: string) => void;
   exportArticle: (format: 'html'|'md') => void;
+  exportRenderBundle: () => void;
   saveSpotGif: (spot: ArticleSpotState) => void;
   saveArticleGifs: () => void;
   renderStatusLabel: (status: Job['status']) => string;
 };
 
-function ArticleEmbeddedPreview({ title, summary, articleText, spots, openSpotId, setOpenSpotId, updateSpot, previewSpot, renderSpot, exportArticle, saveSpotGif, saveArticleGifs, renderStatusLabel }: ArticleEmbeddedPreviewProps) {
+function ArticleEmbeddedPreview({ title, summary, articleText, spots, openSpotId, setOpenSpotId, updateSpot, previewSpot, renderSpot, exportArticle, exportRenderBundle, saveSpotGif, saveArticleGifs, renderStatusLabel }: ArticleEmbeddedPreviewProps) {
   const paragraphs = splitArticleParagraphs(stripGraphicDirectives(articleText));
   const sortedSpots = [...spots].sort((a, b) => a.insertAfterParagraph - b.insertAfterParagraph || a.priority - b.priority);
   const byParagraph = new Map<number, ArticleSpotState[]>();
@@ -110,6 +113,7 @@ function ArticleEmbeddedPreview({ title, summary, articleText, spots, openSpotId
   const acceptedCount = spots.filter(s => s.accepted).length;
   const gifDownloads = buildArticleGifDownloads(title || 'Visualized article', spots);
   const visualCount = spots.filter(s => s.accepted && (s.draft || s.job?.gifUrl || s.job?.mp4Url)).length;
+  const renderSourceCount = spots.filter(s => s.accepted && s.draft?.generatedHtml).length;
   const pendingCount = spots.filter(s => s.accepted && !s.draft && !s.job).length;
 
   function renderInlineSpot(spot: ArticleSpotState) {
@@ -155,8 +159,8 @@ function ArticleEmbeddedPreview({ title, summary, articleText, spots, openSpotId
   return <article className="message assistant embedded-preview-message">
     <div className="avatar"><Layers3 size={16}/></div>
     <div className="bubble embedded-preview-bubble">
-      <div className="preview-head inline-preview-head"><div><span className="kicker">Article visual editor</span><h2>{title || 'Visualized article'}</h2><p>{summary}</p></div><div className="downloads"><button className="ghost-button compact" onClick={() => exportArticle('html')}>Export HTML</button><button className="ghost-button compact" onClick={() => exportArticle('md')}>Export MD</button>{gifDownloads.length > 0 && <button className="ghost-button compact" onClick={saveArticleGifs}>Save all GIFs</button>}</div></div>
-      <div className="article-visual-stats"><span>{acceptedCount} proposed visuals</span><span>{visualCount} previewed</span><span>{pendingCount} waiting for preview</span><span>{gifDownloads.length} GIF{gifDownloads.length === 1 ? '' : 's'} ready</span><span>Click any placeholder or animation to edit</span></div>
+      <div className="preview-head inline-preview-head"><div><span className="kicker">Article visual editor</span><h2>{title || 'Visualized article'}</h2><p>{summary}</p></div><div className="downloads"><button className="ghost-button compact" onClick={() => exportArticle('html')}>Export HTML</button><button className="ghost-button compact" onClick={() => exportArticle('md')}>Export MD</button><button className="ghost-button compact" disabled={renderSourceCount === 0} onClick={exportRenderBundle}>Export render bundle</button>{gifDownloads.length > 0 && <button className="ghost-button compact" onClick={saveArticleGifs}>Save all GIFs</button>}</div></div>
+      <div className="article-visual-stats"><span>{acceptedCount} proposed visuals</span><span>{visualCount} previewed</span><span>{renderSourceCount} local-render source{renderSourceCount === 1 ? '' : 's'} ready</span><span>{pendingCount} waiting for preview</span><span>{gifDownloads.length} GIF{gifDownloads.length === 1 ? '' : 's'} ready</span><span>Click any placeholder or animation to edit</span></div>
       <div className="article-document-preview inline-editing-preview">
         <h1>{title || 'Visualized article'}</h1>
         {paragraphs.map((paragraph, index) => {
@@ -236,6 +240,27 @@ npm run agl:render:test -- --dry-run
 npm run agl:run -- --input examples/articles/directive-demo.md --agent codex --no-render --out .agl/runs/demo-no-render
 # Full local render after Codex + HyperFrames are verified:
 npm run agl:run -- --input examples/articles/directive-demo.md --agent codex --render --out .agl/runs/demo-full`;
+
+const renderBundleCommands = `# In the web app: generate at least one preview, then click "Export render bundle".
+# Unzip the downloaded bundle and render locally:
+cd /path/to/unzipped-agl-render-bundle
+node render-all.mjs --dry-run
+node render-all.mjs
+
+# Or render the same bundle from a cloned repo:
+npm run agl:render-bundle -- --bundle /path/to/unzipped-agl-render-bundle --dry-run
+npm run agl:render-bundle -- --bundle /path/to/unzipped-agl-render-bundle`;
+
+const clearUiInstructions = `Use the Clear UI button in the top navigation when demo state gets messy.
+
+It resets:
+- saved article/concept text
+- active queue polling markers
+- previews, render jobs, article plan, and inline spot editor
+- imported DESIGN.md/custom style state
+- style/aspect/duration back to defaults
+
+It intentionally does not erase saved access keys. Clear browser site data if you also want to remove local keys.`;
 function CopyBlock({ label, text }: { label: string; text: string }) {
   const [copied, setCopied] = useState(false);
   async function copy() {
@@ -261,7 +286,7 @@ function InstructionsPage({ onBack }: { onBack: () => void }) {
   return <main className="app-shell instructions-shell">
     <header className="topbar instructions-topbar">
       <div className="brand"><span className="brand-mark"><Wand2 size={17}/></span><span>Animated Graphics Lab</span></div>
-      <nav className="instructions-nav"><button type="button" onClick={() => scrollToInstruction('agents')}>Agents</button><button type="button" onClick={() => scrollToInstruction('autonomous')}>Autonomous</button><button type="button" onClick={() => scrollToInstruction('local')}>Local setup</button><button type="button" onClick={() => scrollToInstruction('judges')}>Judges</button><button type="button" onClick={() => scrollToInstruction('troubleshooting')}>Troubleshooting</button></nav>
+      <nav className="instructions-nav"><button type="button" onClick={() => scrollToInstruction('agents')}>Agents</button><button type="button" onClick={() => scrollToInstruction('autonomous')}>Autonomous</button><button type="button" onClick={() => scrollToInstruction('render-bundle')}>Render bundle</button><button type="button" onClick={() => scrollToInstruction('local')}>Local setup</button><button type="button" onClick={() => scrollToInstruction('github')}>GitHub</button><button type="button" onClick={() => scrollToInstruction('judges')}>Judges</button><button type="button" onClick={() => scrollToInstruction('troubleshooting')}>Troubleshooting</button></nav>
       <div className="mode-tabs"><button onClick={onBack}>Back to app</button></div>
     </header>
     <section className="instructions-page">
@@ -292,6 +317,19 @@ function InstructionsPage({ onBack }: { onBack: () => void }) {
         <CopyBlock label="Autonomous local commands" text={autonomousRunCommands}/>
       </section>
 
+      <section id="render-bundle" className="instruction-section">
+        <div><span className="kicker">Preview here, render locally</span><h2>Export a HyperFrames render bundle.</h2></div>
+        <p>Generate one or more article previews in the browser, then export the exact approved HTML/CSS/GSAP sources as a local bundle. The bundle includes a manifest, source HTML, metadata, and a render script. No Cloudflare storage, queue worker, Codex credentials, or API keys are included.</p>
+        <ol>
+          <li>Import or plan article visuals.</li>
+          <li>Generate a live preview for each visual you want to render.</li>
+          <li>Click <strong>Export render bundle</strong> in the article visual editor.</li>
+          <li>Unzip locally and run the generated script or the repo CLI command.</li>
+          <li>Use the produced GIF/MP4 files or rendered article outputs.</li>
+        </ol>
+        <CopyBlock label="Render an exported bundle" text={renderBundleCommands}/>
+      </section>
+
       <section id="local" className="instruction-section">
         <div><span className="kicker">For local users</span><h2>Run the whole app locally.</h2></div>
         <p>Local mode runs a Wrangler Worker API, local D1 queues, Vite UI, and a pull-based render worker. No public Cloudflare deployment is required. Use the hosted Cloudflare page as a demo/docs surface; use local mode for private subscriptions and device rendering.</p>
@@ -300,7 +338,20 @@ function InstructionsPage({ onBack }: { onBack: () => void }) {
         <CopyBlock label="Configure local rendering + LLM provider" text={localSetupCommands}/>
         <CopyBlock label="Start everything in one terminal" text={localRunCommands}/>
         <CopyBlock label="Manual three-terminal debug mode" text={manualLocalRunCommands}/>
+        <CopyBlock label="Clear the demo UI" text={clearUiInstructions}/>
         <p>Open <code>http://localhost:5173</code>, paste the master key printed by setup into Access settings, then paste an article or an agent draft.</p>
+      </section>
+
+      <section id="github" className="instruction-section">
+        <div><span className="kicker">GitHub handoff</span><h2>Clone, fork, and run from the public repo.</h2></div>
+        <p>The GitHub repo is the source of truth for local setup, agent instructions, and render-bundle usage. Hosted Cloudflare pages are demo/docs only; private provider credentials and HyperFrames rendering stay local.</p>
+        <CopyBlock label="Clone the repo" text={githubCloneCommands}/>
+        <CopyBlock label="Fork and develop" text={githubForkCommands}/>
+        <ul>
+          <li>Read <code>docs/local-quickstart.md</code> for the fastest local path.</li>
+          <li>Read <code>docs/agents.md</code> before asking another agent to write <code>AGL_GRAPHIC</code> placeholders.</li>
+          <li>Read <code>docs/workflow-architecture.md</code> for queue, preview, render, and export internals.</li>
+        </ul>
       </section>
 
       <section id="judges" className="instruction-section">
@@ -309,7 +360,7 @@ function InstructionsPage({ onBack }: { onBack: () => void }) {
           <li>Open the hosted app or run the local quickstart.</li>
           <li>Paste an article containing the directive example above.</li>
           <li>Click <strong>Import graphic placeholders</strong>.</li>
-          <li>Generate a live preview, revise it, then render if the local worker is available.</li>
+          <li>Generate a live preview, revise it, then either queue render if the local worker is available or click <strong>Export render bundle</strong> to render with HyperFrames locally.</li>
           <li>Export HTML/Markdown and confirm the article embeds the visual or a pending marker.</li>
         </ol>
         <p>The important thing to evaluate is the agent-native contract and preview-before-render workflow, not just a single generated GIF.</p>
@@ -709,6 +760,17 @@ export function App() {
     if (format === 'html') downloadText(`${base}.html`, buildArticleHtml(articleText, spots, title), 'text/html;charset=utf-8');
     else downloadText(`${base}.md`, buildArticleMarkdown(articleText, spots), 'text/markdown;charset=utf-8');
   }
+  async function exportRenderBundle() {
+    const title = articlePlan?.title || 'Visualized article';
+    const renderable = articleSpots.filter(s => s.accepted && s.draft?.generatedHtml);
+    if (!renderable.length) {
+      setMessage('Generate at least one preview first. The render bundle exports approved preview HTML for local HyperFrames rendering.');
+      return;
+    }
+    const files = buildRenderBundleFiles({ title, articleText, spots: renderable });
+    await downloadRenderBundleZip(renderBundleFilename(title), files);
+    setMessage(`Exported local HyperFrames render bundle with ${renderable.length} source${renderable.length === 1 ? '' : 's'}.`);
+  }
   async function saveSpotGif(spot: ArticleSpotState) {
     if (!spot.job?.gifUrl) {
       setMessage(`Render ${spot.id} first, then the GIF can be saved.`);
@@ -750,7 +812,7 @@ export function App() {
 
       {mode === 'article' && detectedDirectives.length > 0 && !articlePlan && <article className="message assistant directive-import-message"><div className="avatar"><Layers3 size={16}/></div><div className="bubble directive-import-bubble"><div><span className="kicker">Agentic graphic placeholders</span><h2>Found {detectedDirectives.length} AGL_GRAPHIC request{detectedDirectives.length === 1 ? '' : 's'}</h2><p>Import these placeholders as editable visual spots, then approve, revise, preview, and render them into GIFs.</p>{detectedDirectives.some(d => d.parseStatus === 'error') && <p className="error">Some placeholders need review before generation.</p>}</div><button className="send-button" onClick={importGraphicDirectives}>Import graphic placeholders</button></div></article>}
 
-      {articlePlan && mode === 'article' && <ArticleEmbeddedPreview title={articlePlan.title || 'Visualized article'} summary={articlePlan.summary} articleText={articleText} spots={articleSpots} openSpotId={openSpotId} setOpenSpotId={setOpenSpotId} updateSpot={updateSpot} previewSpot={previewSpot} renderSpot={renderSpot} exportArticle={exportArticle} saveSpotGif={saveSpotGif} saveArticleGifs={saveArticleGifs} renderStatusLabel={renderStatusLabel}/>} 
+      {articlePlan && mode === 'article' && <ArticleEmbeddedPreview title={articlePlan.title || 'Visualized article'} summary={articlePlan.summary} articleText={articleText} spots={articleSpots} openSpotId={openSpotId} setOpenSpotId={setOpenSpotId} updateSpot={updateSpot} previewSpot={previewSpot} renderSpot={renderSpot} exportArticle={exportArticle} exportRenderBundle={exportRenderBundle} saveSpotGif={saveSpotGif} saveArticleGifs={saveArticleGifs} renderStatusLabel={renderStatusLabel}/>} 
 
       {draft && mode === 'graphic' && <article className="message user"><div className="avatar user-avatar">HM</div><div className="bubble user-bubble"><strong>Concept</strong><p>{conceptText || 'No concept yet.'}</p>{articleContext && <small>Context: {articleContext}</small>}</div></article>}
       {draft && pendingRestyle && mode === 'graphic' && <article className="message assistant restyle-message"><div className="avatar"><Sparkles size={16}/></div><div className="bubble restyle-banner"><div><strong>Style changed to {activeDesignSystem.label}</strong><span>Your current preview still uses the old styling.</span></div><button className="send-button small-send" disabled={busy} onClick={() => { setChangePrompt('Restyle the existing animation using the selected design system. Keep the same concept, labels, layout intent, timing, and grammar. Change only colors, typography, surfaces, lines, shadows, and motion personality.'); generatePreview(true); }}>Restyle current preview</button></div></article>}

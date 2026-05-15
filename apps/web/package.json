@@ -10,14 +10,15 @@
   },
   "dependencies": {
     "@agl/composition-schema": "file:../../packages/composition-schema",
+    "@agl/workflow-core": "file:../../packages/workflow-core",
     "@vitejs/plugin-react": "^5.1.2",
-    "vite": "^7.3.0",
-    "typescript": "^5.9.3",
-    "react": "^19.2.3",
-    "react-dom": "^19.2.3",
+    "fflate": "^0.8.2",
     "gsap": "^3.14.2",
     "lucide-react": "^0.562.0",
-    "@agl/workflow-core": "file:../../packages/workflow-core"
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.0"
   },
   "devDependencies": {
     "@types/react": "^19.2.7",
