@@ -1,7 +1,19 @@
 import type { Job, GraphicDraft } from '../types';
 import type { ArticleAnalysisRequest, ArticleVisualizationPlan, DraftRequest, JobRequest } from '@agl/composition-schema';
 
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8787';
+const PRODUCTION_API_BASE = 'https://animated-graphics-lab-api.hungryclaw.workers.dev';
+
+function resolveApiBase() {
+  const configured = import.meta.env.VITE_API_BASE as string | undefined;
+  const configuredIsLocalhost = configured ? /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/i.test(configured) : false;
+  const pageIsLocalDev = typeof window !== 'undefined' && /^(localhost|127\.0\.0\.1)$/.test(window.location.hostname);
+
+  if (configured && (!configuredIsLocalhost || pageIsLocalDev)) return configured.replace(/\/$/, '');
+  if (pageIsLocalDev) return 'http://localhost:8787';
+  return PRODUCTION_API_BASE;
+}
+
+const API_BASE = resolveApiBase();
 
 function authHeaders(masterKey?: string, byokKey?: string) {
   const headers: Record<string,string> = { 'content-type': 'application/json' };
