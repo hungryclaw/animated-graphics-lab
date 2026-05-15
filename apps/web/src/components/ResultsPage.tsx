@@ -101,48 +101,40 @@ export function ResultsPage({ onBack, onUseDemoArticle, currentArticleResult }: 
   return <main className="app-shell results-shell">
     <header className="topbar results-topbar">
       <div className="brand"><span className="brand-mark">↔</span><span>Animated Graphics Lab</span></div>
-      <div className="stepper" aria-label="Results sections"><span className="active">Saved results</span><span>Before</span><span>After</span></div>
-      <div className="mode-tabs"><button onClick={onBack}>Back to app</button></div>
+      <div className="stepper" aria-label="Results sections"><span className="active">Before / After</span></div>
+      <div className="mode-tabs"><button onClick={onBack}>← Back to editor</button></div>
     </header>
 
     <section className="results-page">
-      <div className="results-hero">
-        <span className="kicker">Focused before / after</span>
-        <h1>The real generated article gets the whole screen.</h1>
-        <p>No result picker, no competing examples. This view focuses on the current workspace article and uses the available space to show the real generated HTML previews or rendered GIF/MP4 assets in context.</p>
-      </div>
-
-      <div className="results-layout single-result-layout">
-        {active && activeDesign && <section className={active.isCurrent ? 'result-detail current-result-detail focused-result-detail' : 'result-detail focused-result-detail'}>
-          <div className="result-detail-head">
-            <div>
-              <span className="kicker">Saved result · {active.createdAt}</span>
-              <h2>{active.title}</h2>
-              <p>{active.summary}</p>
-            </div>
-            <div className="result-actions">
-              {active.sourceUrl && <a className="ghost-button compact" href={active.sourceUrl} target="_blank" rel="noreferrer">Source</a>}
-              {active.demoArticleId && <button className="send-button small-send" onClick={() => onUseDemoArticle(active.demoArticleId!)}>Use this demo article</button>}
-              {active.isCurrent && <button className="send-button small-send" onClick={onBack}>Continue editing current article</button>}
-            </div>
+      {active && activeDesign && <section className="result-detail focused-result-detail">
+        <div className="result-detail-head">
+          <div>
+            <span className="kicker">{active.isCurrent ? 'Your current article' : 'Example result'} · {activeDesign.label}</span>
+            <h2>{active.articleTitle}</h2>
+            <p className="result-summary">{active.summary}</p>
           </div>
-          <div className="result-meta-row">
-            <span>{activeDesign.label}</span>
-            <span>{active.animations.length} animation slots</span>
-            <span>{active.tags.slice(0, 3).join(' · ')}</span>
+          <div className="result-actions">
+            {active.sourceUrl && <a className="ghost-button compact" href={active.sourceUrl} target="_blank" rel="noreferrer">Source article</a>}
+            {active.demoArticleId && <button className="send-button small-send" onClick={() => onUseDemoArticle(active.demoArticleId!)}>Try with this article</button>}
+            {active.isCurrent && <button className="send-button small-send" onClick={onBack}>Continue editing</button>}
           </div>
-          <div className="before-after-grid">
-            <div className={active.isCurrent ? 'before-after-panel before-panel compact-before-panel' : 'before-after-panel'}>
-              <div className="panel-label"><strong>Before</strong><span>{active.sourceLabel}</span></div>
-              <ArticleMarkdownPreview markdown={active.markdown} />
-            </div>
-            <div className={active.isCurrent ? 'before-after-panel after-panel featured-after-panel' : 'before-after-panel after-panel'}>
-              <div className="panel-label"><strong>After</strong><span>{active.isCurrent ? 'Real generated animations inserted' : 'Animation slots inserted'}</span></div>
-              <ArticleMarkdownPreview markdown={active.markdown} insertAfterParagraph={inserts} />
-            </div>
+        </div>
+        <div className="result-meta-row">
+          <span>{active.animations.length} animation{active.animations.length !== 1 ? 's' : ''} inserted</span>
+          <span>{active.tags.slice(0, 3).join(' · ')}</span>
+          {active.isCurrent && <span className="meta-current">Live workspace</span>}
+        </div>
+        <div className="before-after-grid focused-ba-grid">
+          <div className="before-after-panel before-panel">
+            <div className="panel-label"><strong>Before</strong><span>Plain article</span></div>
+            <ArticleMarkdownPreview markdown={active.markdown} />
           </div>
-        </section>}
-      </div>
+          <div className="before-after-panel after-panel">
+            <div className="panel-label"><strong>After</strong><span>{active.isCurrent ? 'Real generated animations' : `${active.animations.length} animations inserted`}</span></div>
+            <ArticleMarkdownPreview markdown={active.markdown} insertAfterParagraph={inserts} />
+          </div>
+        </div>
+      </section>}
     </section>
   </main>;
 }
