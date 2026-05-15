@@ -54,10 +54,9 @@ function mediaForSpot(spot: ArticleSpotState): Pick<ResultAnimation, 'mediaKind'
 }
 
 export function buildCurrentResultView(current?: CurrentArticleResult): CurrentResultView | null {
-  if (!current?.articleText.trim() || !current.articlePlan) return null;
+  if (!current?.articleText.trim()) return null;
   const acceptedSpots = current.articleSpots.filter(spot => spot.accepted);
-  if (!acceptedSpots.length) return null;
-  const articleTitle = current.articlePlan.title || markdownTitle(current.articleText);
+  const articleTitle = current.articlePlan?.title || markdownTitle(current.articleText);
   return {
     id: 'current-workspace-before-after',
     title: `${articleTitle} · current workspace`,
@@ -66,7 +65,9 @@ export function buildCurrentResultView(current?: CurrentArticleResult): CurrentR
     sourceLabel: 'Current app state',
     stylePreset: current.stylePreset,
     createdAt: 'current session',
-    summary: current.articlePlan.summary || 'The article currently open in the app, shown before and after its accepted animation slots are inserted.',
+    summary: current.articlePlan?.summary || (acceptedSpots.length
+      ? `The article currently open in the app, shown before and after its accepted animation slots are inserted.`
+      : `Your article is ready. Find visualization spots to see animations inserted here.`),
     tags: ['current article', 'local state', 'rendered example'],
     isCurrent: true,
     animations: acceptedSpots
