@@ -9,6 +9,13 @@ const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
 
 type TextBox = { text: string; left: number; top: number; width: number; height: number };
 
+export class GeneratedHtmlValidationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'GeneratedHtmlValidationError';
+  }
+}
+
 function stripTags(value: string) {
   return value.replace(/<[^>]+>/g, ' ').replace(/&nbsp;/gi, ' ').replace(/\s+/g, ' ').trim();
 }
@@ -77,7 +84,7 @@ export function validateGeneratedHtml(html: string) {
   }
   try { validateNoReadableTextOverlap(html); }
   catch (err) { errors.push(err instanceof Error ? err.message : String(err)); }
-  if (errors.length) throw new Error(errors.join('; '));
+  if (errors.length) throw new GeneratedHtmlValidationError(errors.join('; '));
 }
 
 
@@ -230,7 +237,7 @@ export async function generateGraphicDraft(req: DraftRequest, env: AiEnv, byokKe
   const provider = (req.provider || 'gemini').toLowerCase();
   let attemptReq = req;
   let lastError: unknown;
-  for (let attempt = 1; attempt <= 2; attempt++) {
+  for (let attempt = 1; attempt <= 3; attempt++) {
     try {
       const content = provider.includes('gemini') || provider.includes('google')
         ? await callGemini(attemptReq, env, byokKey)
@@ -240,11 +247,11 @@ export async function generateGraphicDraft(req: DraftRequest, env: AiEnv, byokKe
       return parsed;
     } catch (err) {
       lastError = err;
-      if (attempt >= 2) break;
+      if (attempt >= 3) break;
       attemptReq = {
         ...req,
         currentHtml: '',
-        changePrompt: `The previous generated HTML failed validation: ${err instanceof Error ? err.message : String(err)}. Regenerate from scratch. Keep the same concept, but lay out all readable labels/details with at least 24px spacing and no overlapping bounding boxes. Return only valid JSON with corrected generatedHtml.`
+        changePrompt: `The previous generated HTML failed validation: ${err instanceof Error ? err.message : String(err)}. Regenerate from scratch. Keep the same concept, but simplify the layout: use fewer readable labels, place each label in its own non-overlapping row or column, and leave at least 32px spacing between every label/title/badge/callout. Return only valid JSON with corrected generatedHtml.`
       };
     }
   }

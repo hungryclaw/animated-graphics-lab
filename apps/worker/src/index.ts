@@ -1,7 +1,7 @@
 import { ArticleAnalysisRequestSchema, DraftRequestSchema, JobRequestSchema, aspectRatios } from '@agl/composition-schema';
 import { verifyToken } from './auth';
 import { publicJob, queuePosition } from './queue';
-import { generateArticlePlan, generateGraphicDraft, validateGeneratedHtml } from './ai';
+import { generateArticlePlan, generateGraphicDraft, GeneratedHtmlValidationError, validateGeneratedHtml } from './ai';
 
 type Env = {
   DB: D1Database;
@@ -93,8 +93,16 @@ async function handleDraft(req: Request, env: Env) {
     : Boolean(req.headers.get('x-byok-key'));
   if (!authOk) return json({ error: 'unauthorized' }, { status: 401 });
   if (parsed.data.authMode === 'byok') {
-    const draft = await generateGraphicDraft(parsed.data, env, req.headers.get('x-byok-key'));
-    return json(draft);
+    try {
+      const draft = await generateGraphicDraft(parsed.data, env, req.headers.get('x-byok-key'));
+      return json(draft);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      if (err instanceof GeneratedHtmlValidationError) {
+        return json({ error: 'draft_validation_failed', message }, { status: 422 });
+      }
+      return json({ error: 'ai_generation_failed', message }, { status: 502 });
+    }
   }
   const draftId = id('draft');
   const t = now();
